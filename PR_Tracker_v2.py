@@ -35,12 +35,11 @@ print(f"\n Sets at max weight:")
 pr_sets = bench_data[bench_data['weight_lbs'] == bench_data['weight_lbs'].max()]
 print(pr_sets[['date', 'weight_lbs', 'reps']].head())
 
-""" 
-This function receives ONE group (all sets for one exercise).
-It returns information about that exercise's PR.
-"""
-
 def get_pr_details(group):
+    """ 
+    This function receives ONE group (all sets for one exercise).
+    It returns information about that exercise's PR.
+    """
     max_weight = group['weight_lbs'].max()
     pr_rows = group[group['weight_lbs'] == max_weight]
 
