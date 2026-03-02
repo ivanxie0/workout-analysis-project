@@ -191,3 +191,57 @@ if len(top_15) > 2:
 
 plt.clf()
 print()
+
+#VISUALIZATION 4: MONTHLY VOLUME PATTERNS
+print("=" * 80)
+print("VISUALIZATION 4: MONTHLY VOLUME PATTERNS")
+print("=" * 80)
+
+df['month'] = df['date'].dt.to_period('M')
+monthly_volume = df.groupby('month')['volume'].sum()
+
+plt.figure(figsize=(14,7))
+x = range(len(monthly_volume))
+bars = plt.bar(x, monthly_volume.values, color='#2E86AB', alpha=0.7,
+               edgecolor='black')
+
+max_idx = monthly_volume.values.argmax()
+bars[max_idx].set_color('#FFD700')
+
+plt.xticks(x, [str(m) for m in monthly_volume.index], rotation = 45, 
+           ha='right')
+save_path = os.path.join(vis_folder, 'monthly_volume_distribution.png')
+plt.savefig(save_path, dpi=150, bbox_inches='tight')
+print("✓ Created visualizations/monthly_volume_distribution.png")
+best_month = monthly_volume.idxmax()
+best_vol = monthly_volume.max()
+print(f"  Highest volume month: {best_month} ({best_vol:,.0f} lbs)")
+print(f"  Average monthly volume: {monthly_volume.mean():,.0f} lbs")
+
+plt.clf()
+print()
+
+# ANALYSIS: OPTIMAL VOLUME RANGE
+print("=" * 80)
+print("ANALYSIS: FINDING MY OPTIMAL VOLUME RANGE")
+print("=" * 80)
+
+#Average PRS per quartile
+weekly_summary['volume_quartile'] = pd.qcut(weekly_summary['volume'], q=4,
+                                            labels=['Low', 'medium-Low',
+                                                    'Medium-High', 'High'])
+prs_by_volume = weekly_summary.groupby('volume_quartile')['prs'].mean()
+
+print("\nAverage PRs by volume level:")
+for quartile, avg_prs in prs_by_volume.items():
+    volume_range = weekly_summary[weekly_summary['volume_quartile'] 
+                                  == quartile]['volume']
+    vmin, vmax = volume_range.min(), volume_range.max()
+    range_str = f"({vmin:6.0f} - {vmax:6.0f} lbs)"
+    print(f"  {quartile:12s} {range_str}: {avg_prs:.2f} PRs/week")
+    
+best_quartile = prs_by_volume.idxmax()
+print(f"\n✓ Your best PR rate is in the '{best_quartile}' volume range")
+print(f"  This suggests this volume level is optimal for you!")
+
+print()
