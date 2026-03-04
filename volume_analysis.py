@@ -208,7 +208,7 @@ bars = plt.bar(x, monthly_volume.values, color='#2E86AB', alpha=0.7,
 max_idx = monthly_volume.values.argmax()
 bars[max_idx].set_color('#FFD700')
 
-plt.xticks(x, [str(m) for m in monthly_volume.index], rotation = 45, 
+plt.xticks(x, [str(m) for m in monthly_volume.index], rotation = 45,
            ha='right')
 save_path = os.path.join(vis_folder, 'monthly_volume_distribution.png')
 plt.savefig(save_path, dpi=150, bbox_inches='tight')
@@ -233,15 +233,86 @@ weekly_summary['volume_quartile'] = pd.qcut(weekly_summary['volume'], q=4,
 prs_by_volume = weekly_summary.groupby('volume_quartile')['prs'].mean()
 
 print("\nAverage PRs by volume level:")
+# ANALYSIS: OPTIMAL VOLUME RANGE
+print("=" * 80)
+print("ANALYSIS: FINDING MY OPTIMAL VOLUME RANGE")
+print("=" * 80)
+
+#Average PRS per quartile
+weekly_summary['volume_quartile'] = pd.qcut(weekly_summary['volume'], q=4,
+                                            labels=['Low', 'medium-Low',
+                                                    'Medium-High', 'High'])
+prs_by_volume = weekly_summary.groupby('volume_quartile')['prs'].mean()
+
+print("\nAverage PRs by volume level:")
 for quartile, avg_prs in prs_by_volume.items():
-    volume_range = weekly_summary[weekly_summary['volume_quartile'] 
+    volume_range = weekly_summary[weekly_summary['volume_quartile']
                                   == quartile]['volume']
     vmin, vmax = volume_range.min(), volume_range.max()
     range_str = f"({vmin:6.0f} - {vmax:6.0f} lbs)"
     print(f"  {quartile:12s} {range_str}: {avg_prs:.2f} PRs/week")
-    
+
 best_quartile = prs_by_volume.idxmax()
-print(f"\n✓ Your best PR rate is in the '{best_quartile}' volume range")
-print(f"  This suggests this volume level is optimal for you!")
+print(f"\n✓ My best PR rate is in the '{best_quartile}' volume range")
+print(f"  This suggests this volume level is optimal for me!")
 
 print()
+
+# Insight Summary
+print("=" * 80)
+print("KEY INSIGHTS FROM MY VOLUME DATA")
+print("=" * 80)
+
+# Recent trend
+recent_8_weeks = weekly_summary.tail(8)
+trend = recent_8_weeks['volume'].corr(pd.Series(range(len(recent_8_weeks))))
+
+print(f"\n📊 VOLUME TRENDS:")
+print(f"  • Total volume all-time: {df['volume'].sum():,.0f} lbs")
+avg_vol = weekly_summary['volume'].mean()
+print(f"  • Average weekly volume: {avg_vol:,.0f} lbs")
+print(f"  • Recent 8-week trend: {'📈 Increasing' if trend > 0.3 else \
+                                  '📉 Decreasing' if trend < -0.3 else \
+                                    '➡️  Stable'}")
+
+print(f"\n💪 VOLUME vs PROGRESS:")
+print(f"  • Correlation with PRs: {correlation:+.3f}")
+if correlation > 0.5:
+    print(f"  • More volume → More PRs (strong relationship!)")
+elif correlation > 0.3:
+    print(f"  • More volume → More PRs (moderate relationship)")
+else:
+    print(f"  • Volume and PRs weakly related")
+
+print(f"\n🎯 OPTIMAL VOLUME:")
+print(f"  • Your best PR rate: '{best_quartile}' volume weeks")
+volume_range = weekly_summary[
+    weekly_summary['volume_quartile'] == best_quartile
+]['volume']
+vr_min = volume_range.min()
+vr_max = volume_range.max()
+print(f"  • Target range: {vr_min:,.0f} - {vr_max:,.0f} lbs/week")
+
+print(f"\n🏋️  CONSISTENCY:")
+volume_std = weekly_summary['volume'].std()
+volume_cv = (volume_std / weekly_summary['volume'].mean()) * 100
+print(f"  • Weekly volume variation: {volume_cv:.0f}%")
+if volume_cv < 30:
+    print(f"  • Very consistent training! ✓")
+elif volume_cv < 50:
+    print(f"  • Moderately consistent")
+else:
+    print(f"  • High variation (consider more structured programming)")
+
+print()
+print("=" * 80)
+print("SAVING ANALYSIS DATA")
+print("=" * 80)
+
+summary_path = os.path.join(os.path.dirname(vis_folder), 'outputs')
+os.makedirs(summary_path, exist_ok=True)
+weekly_summary_file = os.path.join(summary_path, 'weekly_volume_summary.csv')
+
+weekly_summary_save = weekly_summary.copy()
+weekly_summary_save.index = weekly_summary_save.index.astype(str)
+weekly_summary_save.to_csv(weekly_summary_file)
