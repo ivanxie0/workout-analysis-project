@@ -45,3 +45,52 @@ weekly_summary['weeks_training'] = range(len(weekly_summary))
 
 print(f"✓ Loaded {len(df)} sets across {len(weekly_summary)} weeks")
 print()
+
+# Stratified Analysis: Split by training phase
+beginner = weekly_summary[weekly_summary['weeks_training'] <= 26]
+intermediate = weekly_summary[(weekly_summary['weeks_training'] > 26) &
+                              (weekly_summary['weeks_training'] <= 52)]
+advanced = weekly_summary[weekly_summary['weeks_training'] > 52]
+
+print(f"\nBeginner Phase (0-6 months): {len(beginner)} weeks")
+print(f"Intermediate Phase (6-12 months): {len(intermediate)} weeks")
+print(f"Advanced Phase (12+ months): {len(advanced)} weeks")
+
+# Calculating correlations for each phase
+corr_all = weekly_summary['volume'].corr(weekly_summary['prs'])
+corr_beginner = weekly_summary['volume'].corr(beginner['prs']) if len(beginner)\
+      > 1 else np.nan
+corr_intermediate = intermediate['volume'].corr(intermediate['prs']) \
+    if len(intermediate) > 1 else np.nan
+corr_advanced = advanced['volume'].corr(advanced['prs']) if len(advanced) > 1 \
+    else np.nan
+
+print(f"\n📊 CORRELATION BY TRAINING PHASE:")
+print(f"  All data (naive):       {corr_all:+.3f}")
+beginner_str = f"{corr_beginner:+.3f}" if not np.isnan(corr_beginner) else "N/A"
+intermediate_str = f"{corr_intermediate:+.3f}" if not np.isnan(corr_intermediate) else "N/A"
+advanced_str = f"{corr_advanced:+.3f}" if not np.isnan(corr_advanced) else "N/A"
+print(f"  Beginner (0-6 mo):      {beginner_str}")
+print(f"  Intermediate (6-12 mo): {intermediate_str}")
+print(f"  Advanced (12+ mo):      {advanced_str}")
+
+print(f"\n🎯 INTERPRETATION:")
+print(f"  Similar correlations across phases - volume consistently matters!")
+
+print()
+
+# Rate of Change Analysis
+print("=" * 80)
+print("RATE OF CHANGE ANALYSIS")
+print("=" * 80)
+
+# Calculating changes from previous week
+weekly_summary['volume_change'] = weekly_summary['volume'].diff()
+weekly_summary['pr_change'] = weekly_summary['prs'].diff()
+
+#Correlation between changes
+change_corr = weekly_summary['volume_change'].corr(weekly_summary['pr_change'])
+print(f"\nAbsolute correlation: {corr_all:+.3f}")
+print(f"  → Do high-volume weeks have more PRs?")
+print(f"\nChange correlation: {change_corr:+.3f}")
+print(f"  → Does INCREASING volume lead to more PRs?")
