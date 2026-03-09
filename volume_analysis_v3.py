@@ -191,6 +191,110 @@ def create_lagged_plot(weekly_df, vis_folder):
 
     print("✓ Created visualizations/lagged_volume_correlation.png")
 
+def create_advanced_visualizations(weekly_df, phase_corrs, vis_folder):
+    corr_sets = weekly_df['sets'].corr(weekly_df['prs'])
+    corr_vol = weekly_df['volume_training'].corr(weekly_df['prs'])
+
+    (corr_beg_old, corr_beg_new,
+     corr_int_old, corr_int_new,
+     corr_adv_old, corr_adv_new) = phase_corrs
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 6))
+
+    # Subplot 1: Set count vs PRs
+    ax1.scatter(weekly_df['sets'], weekly_df['prs'],
+                s=80, alpha=0.6, color='#2E86AB', edgecolors='black')
+    coeffs = np.polyfit(weekly_df['sets'], weekly_df['prs'], 1)
+    trend_fn = np.poly1d(coeffs)
+    x_line = np.linspace(
+        weekly_df['sets'].min(), weekly_df['sets'].max(), 100
+    )
+    ax1.plot(x_line, trend_fn(x_line), 'r--', linewidth=2)
+    ax1.set_xlabel('Sets Per Week', fontsize=11, fontweight='bold')
+    ax1.set_ylabel('PRs Hit', fontsize=11, fontweight='bold')
+    ax1.set_title(
+        f'Set Count vs PRs\nr = {corr_sets:+.3f}',
+        fontsize=12, fontweight='bold'
+    )
+    ax1.grid(True, alpha=0.3)
+
+    # Subplot 2: Training volume vs PRs
+    ax2.scatter(weekly_df['volume_training'], weekly_df['prs'],
+                s=80, alpha=0.6, color='#51CF66', edgecolors='black')
+    coeffs = np.polyfit(
+        weekly_df['volume_training'], weekly_df['prs'], 1
+    )
+    trend_fn = np.poly1d(coeffs)
+    x_line = np.linspace(
+        weekly_df['volume_training'].min(),
+        weekly_df['volume_training'].max(), 100
+    )
+    ax2.plot(x_line, trend_fn(x_line), 'r--', linewidth=2)
+    ax2.set_xlabel(
+        'Training Volume (lbs)', fontsize=11, fontweight='bold'
+    )
+    ax2.set_ylabel('PRs Hit', fontsize=11, fontweight='bold')
+    ax2.set_title(
+        f'Training Volume vs PRs\nr = {corr_vol:+.3f}',
+        fontsize=12, fontweight='bold'
+    )
+    ax2.grid(True, alpha=0.3)
+
+    # Subplot 3: Correlation by phase (old vs corrected)
+    phases = ['Beginner', 'Intermediate', 'Advanced']
+    old_corrs = [corr_beg_old, corr_int_old, corr_adv_old]
+    new_corrs = [corr_beg_new, corr_int_new, corr_adv_new]
+
+    x = np.arange(len(phases))
+    width = 0.35
+
+    bars_old = ax3.bar(
+        x - width / 2, old_corrs, width,
+        label='Old (reverse causation)',
+        color='#FF6868', edgecolor='black', alpha=0.8
+    )
+    bars_new = ax3.bar(
+        x + width / 2, new_corrs, width,
+        label='New (corrected)',
+        color='#51CF66', edgecolor='black', alpha=0.8
+    )
+
+    ax3.set_xlabel('Training Phase', fontsize=11, fontweight='bold')
+    ax3.set_ylabel('Correlation (r)', fontsize=11, fontweight='bold')
+    ax3.set_title(
+        'Correlation by Phase:\nOld vs Corrected Method',
+        fontsize=12, fontweight='bold'
+    )
+    ax3.set_xticks(x)
+    ax3.set_xticklabels(phases)
+    ax3.axhline(y=0, color='black', linewidth=0.8)
+    ax3.legend(fontsize=9)
+    ax3.grid(True, alpha=0.3, axis='y')
+    ax3.set_ylim(-1, 1)
+
+    for bar in bars_old:
+        h = bar.get_height()
+        if not np.isnan(h):
+            ax3.text(
+                bar.get_x() + bar.get_width() / 2, h + 0.03,
+                f'{h:+.2f}', ha='center', va='bottom', fontsize=8
+            )
+    for bar in bars_new:
+        h = bar.get_height()
+        if not np.isnan(h):
+            ax3.text(
+                bar.get_x() + bar.get_width() / 2, h + 0.03,
+                f'{h:+.2f}', ha='center', va='bottom', fontsize=8
+            )
+
+    plt.tight_layout()
+    save_path = os.path.join(vis_folder, 'advanced_analysis_summary.png')
+    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.clf()
+
+    print("✓ Created visualizations/advanced_analysis_summary.png")
+
+
 def save_corrected_data(weekly_df, vis_folder):
     """
     Save corrected weekly metrics to CSV.
@@ -361,6 +465,13 @@ def main():
     
     create_comparison_plot(weekly_summary, vis_folder)
     create_lagged_plot(weekly_summary, vis_folder)
+
+    phase_corrs = (
+        corr_beg_old, corr_beg_new,
+        corr_int_old, corr_int_new,
+        corr_adv_old, corr_adv_new
+    )
+    create_advanced_visualizations(weekly_summary, phase_corrs, vis_folder)
     
     # Save data
     print("\n" + "=" * 80)
