@@ -13,7 +13,7 @@ from pathlib import Path
 # ===== CONFIGURATION =====
 
 DATA_PATH = 'workout_data.csv'
-OUTPUT_DIR = Path('/outputs/rep_range_analysis')
+OUTPUT_DIR = Path('outputs/rep_range_analysis')
 MIN_SETS = 20
 MAX_REPS = 18
 
@@ -219,3 +219,55 @@ def plot_range_comparison(prs_by_range, output_dir):
     plt.tight_layout()
     plt.savefig(output_dir / 'rep_range_pr_comparison.png', dpi=150)
     plt.close()
+    
+    # ===== MAIN =====
+ 
+def main():
+ 
+    # Setup output directory
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+ 
+    # Load and prepare
+    df = load_and_prepare(DATA_PATH)
+    print(f"Loaded {len(df)} working sets across {df['exercise_title']
+          .nunique()} exercises")
+    
+    # Add calculated columns
+    df = add_rep_range(df)
+    df = add_estimated_1rm(df)
+
+    # Filter to exercises with enough data
+    set_counts = df.groupby('exercise_title').size()
+    valid_exercises = set_counts[set_counts >= MIN_SETS].index
+    df = df[df['exercise_title'].isin(valid_exercises)].copy()
+    print(f"Filtered to {df['exercise_title'].nunique()} exercises with "
+          f"{MIN_SETS}+ sets")
+    
+    # Run analysis
+    range_dist, prs_by_range = analyze_rep_ranges(df)
+    print_focus_exercise_prs(prs_by_range)
+    
+    # Progression tracking
+    weekly = track_progression(df)
+ 
+    # Generate visualizations
+    plot_rep_range_distribution(range_dist, OUTPUT_DIR)
+    plot_e1rm_progression(weekly, OUTPUT_DIR)
+    plot_range_comparison(prs_by_range, OUTPUT_DIR)
+    
+    # What rep range do I train in most?
+    most_common = range_dist['total_sets'].idxmax()
+    most_pct = range_dist.loc[most_common, 'total_sets'] / \
+        range_dist['total_sets'].sum() * 100
+    print(f"  Most trained range: {most_common} ({most_pct:.0f}% of all sets)")
+ 
+    # What rep range do I least train in?
+    least_common = range_dist['total_sets'].idxmin()
+    least_pct = range_dist.loc[least_common, 'total_sets'] / \
+        range_dist['total_sets'].sum() * 100
+    print(f"  Least trained range: {least_common} ({least_pct:.0f}% of all sets)")
+ 
+    print(f"\n  Visualizations saved to: {OUTPUT_DIR}")
+    
+if __name__ == '__main__':
+    main()
