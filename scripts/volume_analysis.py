@@ -9,7 +9,7 @@ vis_folder = os.path.join(script_dir, 'visualizations')
 os.makedirs(vis_folder, exist_ok=True)
 
 # Loading and Preparing Data
-df = pd.read_csv('workout_data.csv')
+df = pd.read_csv('../data/workout_data.csv')
 df['date'] = pd.to_datetime(df['start_time'], format='%d %b %Y, %H:%M')
 
 # Calculating volume for each set

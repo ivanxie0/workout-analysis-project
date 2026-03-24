@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_csv('workout_data.csv')
+df = pd.read_csv('../data/workout_data.csv')
 # NUMBER OF SETS
 print(f"Loaded {len(df)} sets from your workouts!\n")
 

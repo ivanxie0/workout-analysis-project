@@ -15,7 +15,7 @@ print()
 
 # Load and prepare data
 print("Loading your workout data...")
-df = pd.read_csv('workout_data.csv')
+df = pd.read_csv('../data/workout_data.csv')
 df['date'] = pd.to_datetime(df['start_time'], format='%d %b %Y, %H:%M')
 df['volume'] = df['reps'] * df['weight_lbs']
 df['week'] = df['date'].dt.to_period('W')

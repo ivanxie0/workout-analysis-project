@@ -12,7 +12,7 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 
-DATA_PATH = 'workout_data.csv'
+DATA_PATH = '../data/workout_data.csv'
 OUTPUT_DIR = Path('outputs/rep_range_analysis')
 MIN_SETS = 20
 MAX_REPS = 18

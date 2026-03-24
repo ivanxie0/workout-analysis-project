@@ -10,7 +10,7 @@ os.makedirs(vis_folder, exist_ok=True)
 print(f"Saving visualizations to: {vis_folder}")
 
 #Data
-df = pd.read_csv('workout_data.csv')
+df = pd.read_csv('../data/workout_data.csv')
 df['date'] = pd.to_datetime(df['start_time'], format = '%d %b %Y, %H:%M')
 weighted_sets = df[df['weight_lbs'].notna() & (df['weight_lbs'] > 0)].copy()
 

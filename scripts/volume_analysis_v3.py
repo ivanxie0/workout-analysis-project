@@ -13,7 +13,7 @@ import numpy as np
 import os
 
 # ===== CONFIGURATION =====
-DATA_PATH = 'workout_data.csv'
+DATA_PATH = '../data/workout_data.csv'
 BEGINNER_WEEKS = 26
 INTERMEDIATE_WEEKS = 52
 DATE_FORMAT = '%d %b %Y, %H:%M'

@@ -9,7 +9,7 @@ print("\n" + "=" * 80)
 print("CONVERTING DATES TO DATETIME OBJECTS")
 print("=" * 80)
 
-df = pd.read_csv('workout_data.csv')
+df = pd.read_csv('../data/workout_data.csv')
 weighted_sets = df[df['weight_lbs'].notna() & (df['weight_lbs'] > 0)].copy()
 
 print("\nOriginal date format (string):")
